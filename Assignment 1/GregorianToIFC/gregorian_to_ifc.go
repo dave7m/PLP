@@ -31,25 +31,107 @@ func play(firstRound bool) bool {
 	if firstRound {
 		fmt.Println("Please enter three positive integer numbers (year month day) seperated by one or more blank spaces or type quit.")
 	}
-	answer, err := reader.ReadString('\n')
 
-	if err != nil {
-		handleError(err)
-	}
+	dateIsValid := false
+	var year, month, day int64
 
-	for !isInputSyntaxValid(answer) {
-		fmt.Println("Invalid input, please try again!")
-		answer, err = reader.ReadString('\n')
+	for !dateIsValid {
+
+		answer, err := reader.ReadString('\n')
 		if err != nil {
 			handleError(err)
 		}
+
+		if !isInputSyntaxValid(answer) {
+			fmt.Println("Invalid input, please try again!")
+			continue
+		}
+		if wantsToQuit(answer) {
+			return false
+		}
+		year, month, day = getYearMonthDay(answer)
+		fmt.Printf("year: %d, month: %d, day: %d\n", year, month, day)
+
+		if !doesDateExist(year, month, day) {
+			fmt.Println("Input date does not exist, please try again!")
+			continue
+		}
+
+		// all sanity checks passed, thus the date must exit and can be processed
+		dateIsValid = true
 	}
-	if wantsToQuit(answer) {
-		return false
-	}
-	year, month, day := getYearMonthDay(answer)
-	fmt.Printf("year: %d, month: %d, day: %d\n", year, month, day)
+
+	// convert the valid date to the IFC date format
+	newYear, newMonth, newDay := convertGregorianToIFC(year, month, day)
+	printIFC(newYear, newMonth, newDay)
 	return true
+}
+
+func printIFC(year int64, month int64, day int64) {
+	if month == -1 && day == -1 {
+		fmt.Println("Year Day")
+	} else if month == -2 && day == -2 {
+		fmt.Println("Leap Day")
+	} else {
+		months := [13]string{"January", "February", "March", "April", "Mai", "June", "Sol", "July", "August",
+			"September", "October", "November", "December"}
+		fmt.Printf("%d %s %d\n", year, months[month], day) // todo add padding
+	}
+}
+
+/**
+returned values are analogue to gregorian calendar, except we return year, -1, -1 for year day and year, -2, -2
+for leap day (which must be taken care of by the caller)
+*/
+func convertGregorianToIFC(year int64, month int64, day int64) (int64, int64, int64) {
+	isLeapYear := isGivenYearALeapYear(year)
+	var leapDay int64 = 0
+	if isLeapYear {
+		leapDay = 1
+	}
+	daysPerMonth := [12]int64{31, 28 + leapDay, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+
+	var nThDay int64 = 0
+	// add all preceding months as full
+	for i := 0; int64(i) < month-1; i++ {
+		nThDay += daysPerMonth[i]
+	}
+	// add the days of the current month
+	nThDay += day
+
+	// check for year day and leap day
+	if month == 12 && day == 31 {
+		return year, -1, -1
+	}
+	if isLeapYear && month == 6 && day == 17 {
+		return year, -2, -2
+	}
+
+	// calculate new month
+	var newMonth int64 = 0
+	for ; nThDay > 28; nThDay -= 28 {
+		newMonth += 1
+	}
+
+	// remainder is new day, however, if in a leap year, we must adapt the day // todo adapt day for leap year (2020 06 18)
+	return year, newMonth, nThDay
+
+}
+
+func isGivenYearALeapYear(year int64) bool {
+	return year%4 == 0 && year%100 != 0 || year%400 == 0
+}
+
+func doesDateExist(year int64, month int64, day int64) bool {
+	isLeapYear := isGivenYearALeapYear(year)
+	var leapDay int64 = 0
+	if isLeapYear {
+		leapDay = 1
+	}
+	daysPerMonth := [12]int64{31, 28 + leapDay, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+
+	// because it is first checked if month is <= 12 there can't be an index error
+	return year >= 0 && 1 <= month && month <= 12 && day >= 1 && day <= daysPerMonth[month-1]
 }
 
 func getYearMonthDay(answer string) (int64, int64, int64) {
@@ -77,9 +159,9 @@ func wantsToQuit(answer string) bool {
 }
 
 func isInputSyntaxValid(answer string) bool {
-	fmt.Println(answer)
+	//fmt.Println(answer)
 	// first compile the regular expression function, this makes it faster at run time
-	re, err := regexp.Compile("[0-9]{1,4}(\\s*)([0-9]{1,2}(\\s*)){2}|quit(\\s*)")
+	re, err := regexp.Compile("0*[0-9]{1,4}(\\s*)(0*[0-9]{1,2}(\\s*)){2}|quit(\\s*)")
 	if err != nil {
 		fmt.Println(err)
 	}
