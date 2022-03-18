@@ -18,19 +18,21 @@ import (
 */
 // global reader
 var reader = bufio.NewReader(os.Stdin)
+var firstRound = true
 
 func main() {
 	// variables are written in camelCase
 	var inProgress = true
 	// there is no while-loop in Go
 	for inProgress {
-		inProgress = play(true)
+		inProgress = play()
 	}
 }
 
-func play(firstRound bool) bool {
+func play() bool {
 	if firstRound {
 		fmt.Println("Please enter three positive integer numbers (year month day) seperated by one or more blank spaces or type quit.")
+		firstRound = false
 	}
 
 	dateIsValid := false
@@ -74,14 +76,14 @@ func getIFCString(year int64, month int64, day int64) string {
 	var res string
 	// per definition, Year Day has month and day as -1, Leap Day -2 each
 	if month == -1 && day == -1 {
-		res = fmt.Sprintf("Year Day")
+		res = fmt.Sprintf("Year Day\n")
 	} else if month == -2 && day == -2 {
-		res = fmt.Sprintf("Leap Day")
+		res = fmt.Sprintf("Leap Day\n")
 	} else {
 		months := [13]string{"January", "February", "March", "April", "Mai", "June", "Sol", "July", "August",
 			"September", "October", "November", "December"}
 		weekdays := [7]string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
-		res = fmt.Sprintf("%04d %s %02d (%s)", year, months[month-1], day, weekdays[(day-1)%7])
+		res = fmt.Sprintf("%04d %s %02d (%s)\n", year, months[month-1], day, weekdays[(day-1)%7])
 	}
 	return res
 }

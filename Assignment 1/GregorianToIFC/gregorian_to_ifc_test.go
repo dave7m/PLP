@@ -56,16 +56,16 @@ func TestGetIFCString(t *testing.T) {
 		expectedString string
 	}{
 		// cases from the assignment sheet
-		{2021, 1, 1, "2021 January 01 (Sunday)"},
-		{2021, 1, 28, "2021 January 28 (Saturday)"},
-		{2021, 2, 1, "2021 February 01 (Sunday)"},
-		{2021, 3, 4, "2021 March 04 (Wednesday)"},
-		{2020, 3, 4, "2020 March 04 (Wednesday)"},
-		{2020, -2, -2, "Leap Day"},
-		{2021, 13, 28, "2021 December 28 (Saturday)"},
-		{2020, 13, 28, "2020 December 28 (Saturday)"},
-		{2021, -1, -1, "Year Day"},
-		{2020, -1, -1, "Year Day"},
+		{2021, 1, 1, "2021 January 01 (Sunday)\n"},
+		{2021, 1, 28, "2021 January 28 (Saturday)\n"},
+		{2021, 2, 1, "2021 February 01 (Sunday)\n"},
+		{2021, 3, 4, "2021 March 04 (Wednesday)\n"},
+		{2020, 3, 4, "2020 March 04 (Wednesday)\n"},
+		{2020, -2, -2, "Leap Day\n"},
+		{2021, 13, 28, "2021 December 28 (Saturday)\n"},
+		{2020, 13, 28, "2020 December 28 (Saturday)\n"},
+		{2021, -1, -1, "Year Day\n"},
+		{2020, -1, -1, "Year Day\n"},
 	}
 
 	for _, c := range cases {
