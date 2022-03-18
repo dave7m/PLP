@@ -75,7 +75,8 @@ func printIFC(year int64, month int64, day int64) {
 	} else {
 		months := [13]string{"January", "February", "March", "April", "Mai", "June", "Sol", "July", "August",
 			"September", "October", "November", "December"}
-		fmt.Printf("%d %s %d\n", year, months[month], day) // todo add padding
+		weekdays := [7]string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+		fmt.Printf("%04d %s %02d (%s)\n", year, months[month-1], day, weekdays[(day-1)%7])
 	}
 }
 
@@ -98,6 +99,7 @@ func convertGregorianToIFC(year int64, month int64, day int64) (int64, int64, in
 	}
 	// add the days of the current month
 	nThDay += day
+	fmt.Println(nThDay)
 
 	// check for year day and leap day
 	if month == 12 && day == 31 {
@@ -107,8 +109,13 @@ func convertGregorianToIFC(year int64, month int64, day int64) (int64, int64, in
 		return year, -2, -2
 	}
 
+	// for calculation, we subtract one day from nThDay if it is after the leap day
+	if isLeapYear && nThDay > 6*28 {
+		nThDay--
+	}
+
 	// calculate new month
-	var newMonth int64 = 0
+	var newMonth int64 = 1
 	for ; nThDay > 28; nThDay -= 28 {
 		newMonth += 1
 	}
@@ -161,7 +168,7 @@ func wantsToQuit(answer string) bool {
 func isInputSyntaxValid(answer string) bool {
 	//fmt.Println(answer)
 	// first compile the regular expression function, this makes it faster at run time
-	re, err := regexp.Compile("0*[0-9]{1,4}(\\s*)(0*[0-9]{1,2}(\\s*)){2}|quit(\\s*)")
+	re, err := regexp.Compile("0*[0-9]{1,4}(\\s+)(0*[0-9]{1,2}(\\s+))(0*[0-9]{1,2}(\\s*))|quit(\\s*)")
 	if err != nil {
 		fmt.Println(err)
 	}
