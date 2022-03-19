@@ -3,21 +3,70 @@ package main
 import (
 	"fmt"
 	"golang.org/x/exp/constraints"
+	"golang.org/x/text/encoding/charmap"
+	"os/exec"
+	"runtime"
 )
 
 func main() {
-	x := []int{6, 3, 7, 3, 9, 4, 35, 6, 8, 4, 24, 8, 5}
+	a := []int{6, 3, -6, -45, 7, 3, 9, 4, 35, 6, 8, 4, 24, 8, 5}
+	fmt.Println("sorting ", a)
+	quicksort(a)
+	fmt.Println(a)
+
+	y := []string{"Foo", "foo", "foobar", "FizzBuzz", "abc", "cbde", "aaaa", "zzz", "fses"}
+	fmt.Println("sorting ", y)
+	quicksort(y)
+	fmt.Println(y)
+
+	z := []float64{10.45, 3.141, -49, 25.24, 924.1, 4.5, 6.2, 9.5, -3.5}
+	fmt.Println("sorting ", z)
+	quicksort(z)
+	fmt.Println(z)
+
+	x := []uint{6, 3, 7, 3, 9, 4, 35, 6, 8, 4, 24, 8, 5}
+	fmt.Println("sorting ", x)
 	quicksort(x)
 	fmt.Println(x)
 
-	y := []string{"abc", "cbde", "aaaa", "zzz", "fses"}
-	quicksort(y)
-	fmt.Println(y)
+	callExternalCommand()
+}
+
+func callExternalCommand() {
+	os := runtime.GOOS
+	var out []byte
+	var err error
+	switch os {
+	case "windows":
+		cmd := exec.Command("systeminfo")
+		out, err = cmd.Output()
+		if err != nil {
+			fmt.Println("Error: ", err)
+		}
+		// not tested, might not work.
+	case "linux", "darwin":
+		cmd := exec.Command("uname -a")
+		out, err = cmd.Output()
+		if err != nil {
+			fmt.Println("Error: ", err)
+		}
+	}
+
+	// because the returned byte array is not encoded in the right format, the following 5 lines take care of it
+	// compare to https://www.reddit.com/r/golang/comments/9zsipj/help_osexec_output_on_nonenglish_windows_cmd/
+	d := charmap.CodePage850.NewDecoder()
+	output, err := d.Bytes(out)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(output))
 }
 
 // generics are only supported since Go 1.18, so make sure to have downloaded the recent version
 // function arguments as in https://golangexample.com/generic-sort-for-slices-in-golang/
 // constraints.ordered contains types that are comparable with <, <=, ==, !=, >= and >.
+// see https://pkg.go.dev/golang.org/x/exp/constraints
 func quicksort[E constraints.Ordered](list []E) {
 	l := 0
 	r := len(list) - 1
