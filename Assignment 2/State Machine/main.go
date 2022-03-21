@@ -17,6 +17,7 @@ var (
 )
 var transitionTable = make(map[key]value)
 var stateTable = make(map[string]state)
+var Start state
 
 type key struct {
 	state  state
@@ -77,17 +78,19 @@ func executeMachineAt(path string) {
 
 	simplifyStateMachine(append(append([]byte{10}, content...), 10))
 	initializeStateTable()
-	fmt.Printf("%q\n", stateTable)
+	// fmt.Printf("%q\n", stateTable)
 
 	initializeTransitionTable()
-	println(transitionTable)
-	s := state{stateName: "hello", stateType: startState, stateText: "hello"}
+	fmt.Printf("%q\n", transitionTable)
+
+	s := Start
 	for s.stateType != endState {
-		_, err := reader.ReadString('\n')
+		fmt.Println(s.stateText)
+		input, err := reader.ReadString('\n')
 		if err != nil {
 			panic(err)
 		}
-		//s = doTransition(s, input)
+		s = doTransition(s, input)
 	}
 }
 
@@ -106,18 +109,18 @@ func initializeStateTable() {
 
 	startStateName := strings.Trim(sState[strings.Index(sState, "*")+1:strings.Index(sState, "{")], " ")
 	startStateText := getStateText(sState)
-	fmt.Println(startStateName)
-	startStateState := state{
+	// fmt.Println(startStateName)
+	Start = state{
 		stateName: startStateName,
 		stateText: startStateText,
 		stateType: startState,
 	}
-	stateTable[startStateName] = startStateState
+	stateTable[startStateName] = Start
 
 	for i := 0; i < len(normalStates); i++ {
 		st := string(normalStates[i])
 		stName := strings.Trim(st[strings.Index(st, "@")+1:strings.Index(st, "{")], " ")
-		fmt.Printf("normal state name: %s\n", stName)
+		// fmt.Printf("normal state name: %s\n", stName)
 		stText := getStateText(st)
 		stState := state{
 			stateName: stName,
@@ -130,7 +133,7 @@ func initializeStateTable() {
 	for i := 0; i < len(endStates); i++ {
 		st := string(endStates[i])
 		stName := strings.Trim(st[strings.Index(st, "+")+1:strings.Index(st, "{")], " ")
-		fmt.Printf("end state name: %s\n", stName)
+		// fmt.Printf("end state name: %s\n", stName)
 		stText := getStateText(st)
 		stState := state{
 			stateName: stName,
@@ -151,7 +154,7 @@ func initializeTransitionTable() {
 		panic(err)
 	}
 	//fmt.Println(content)
-	transitionRE, _ := regexp.Compile("(?m)^>\\s*\\w*\\s*\\(\\s*\\w*\\s*\\)\\s*\\w*\\s*:\\s*[^\\n]*$")
+	transitionRE, _ := regexp.Compile("(?m)^>\\s*\\w*\\s*\\([\\s*\\w]+\\)\\s*\\w*\\s*:\\s*[^\\n]*$")
 	allTransitions := transitionRE.FindAll(content, -1)
 	for i := 0; i < len(allTransitions); i++ {
 		s := string(allTransitions[i])
@@ -162,7 +165,7 @@ func initializeTransitionTable() {
 		actionName := strings.Trim(s[strings.Index(s, "(")+1:strings.Index(s, ")")], " ")
 		// fmt.Println(actionName)
 		newStateName := strings.Trim(s[strings.Index(s, ")")+1:strings.Index(s, ":")], " ")
-		fmt.Println(newStateName)
+		// fmt.Println(newStateName)
 		tText := strings.Trim(s[strings.Index(s, ":")+1:], " ")
 
 		oldState, exists := stateTable[oldStateName]
@@ -185,14 +188,17 @@ func initializeTransitionTable() {
 	}
 }
 
-/*
 func doTransition(oldState state, input string) state {
-	t := getTransition(oldState, input)
+	input = strings.Trim(input, "\r\n")
+	t, found := transitionTable[key{state: oldState, action: input}]
+	fmt.Printf("state: %s, action: %s", oldState.stateName, input)
+	if !found {
+		fmt.Println("Invalid input")
+		return oldState
+	}
+	fmt.Println(t.description)
+	return t.state
 }
-
-func getTransition(oldState state, input string) transition {
-
-}*/
 
 // puts start state to the top of a new file, gets rid of comments (only selects valid syntax)
 // catches: null or multiple start states
