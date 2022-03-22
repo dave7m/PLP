@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -12,11 +11,9 @@ import (
 
 var (
 	path            string
-	machinePath     = "machine.machine"
 	reader          = bufio.NewReader(os.Stdin)
 	TransitionTable = make(map[key]value)
 	StateTable      = make(map[string]state)
-	Start           state
 )
 
 type key struct {
@@ -32,7 +29,7 @@ type value struct {
 type stateType int
 
 const (
-	startState stateType = iota
+	startState stateType = iota // iota 'enumerates' the states -> startState has val 0
 	normalState
 	endState
 )
@@ -45,7 +42,7 @@ type state struct {
 
 // init is called before main()
 func init() {
-	// todo get default value for car.machine path or make it required
+	// create a custom flag accepting a string and saving it to path.
 	flag.StringVar(&path, "path", "", "absolute path of machine file")
 }
 
@@ -53,33 +50,31 @@ func main() {
 	flag.Parse()
 
 	if len(path) == 0 {
-		fmt.Println("Usage: main.go -path")
+		fmt.Println("Usage: go run . -path YOUR_PATH")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	// fmt.Println("path: ", path)
 
-	executeMachineAt(path)
+	executeStateMachineConfiguration()
 }
 
-func executeMachineAt(path string) {
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+func executeStateMachineConfiguration() {
 
-	// prepend newline to content
-	contentToParse := append(append([]byte{10}, content...), 10)
-	parse(contentToParse)
-	_, err = isValid(StateTable, TransitionTable)
+	// parse the file and save it as data structures
+	parse()
+
+	var s state
+	// validate internal representation of the State Machine and returns start state
+	s, err = isValid(StateTable, TransitionTable)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// optional:
 	serialize()
 
-	// fmt.Printf("%q\n", TransitionTable)
+	// run internal State Machine
 
-	s := Start
 	for s.stateType != endState {
 		checkSinkState(s)
 		fmt.Println(s.stateText)
@@ -95,7 +90,7 @@ func executeMachineAt(path string) {
 func checkSinkState(s state) {
 	counter := 0
 	// check in the TransitionTable if there is a transition
-	for k, _ := range TransitionTable {
+	for k := range TransitionTable {
 		if k.state == s {
 			counter++
 		}
@@ -107,10 +102,10 @@ func checkSinkState(s state) {
 	}
 }
 
+// changes the current state to the state specified in the transition
 func doTransition(oldState state, input string) state {
 	input = strings.Trim(input, "\r\n")
 	t, found := TransitionTable[key{state: oldState, action: input}]
-	// fmt.Printf("state: %s, action: %s", oldState.stateName, input)
 	if !found {
 		fmt.Print("Invalid input")
 		return oldState

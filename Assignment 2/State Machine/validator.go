@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func isValid(originalStateTable map[string]state, originalTransitionTable map[key]value) (bool, error) {
+func isValid(originalStateTable map[string]state, originalTransitionTable map[key]value) (state, error) {
 	stateTable := make(map[string]state)
 	transitionTable := make(map[key]value)
 
@@ -17,24 +17,24 @@ func isValid(originalStateTable map[string]state, originalTransitionTable map[ke
 	}
 
 	// optional:
-	err1 := assertOneStart(stateTable)
+	start, err1 := assertOneStart(stateTable)
 	if err1 != nil {
-		return false, err1
+		return state{}, err1
 	}
 
 	// optional:
 	err2 := assertMoreThanOneEnd(stateTable)
 	if err2 != nil {
-		return false, err2
+		return state{}, err2
 	}
 
 	isEmpty := solveEmptinessProblem(stateTable, transitionTable)
 	if !isEmpty {
-		return false, fmt.Errorf("state machine is empty, that is, there is no run from the start state to any end. " +
+		return state{}, fmt.Errorf("state machine is empty, that is, there is no run from the start state to any end. " +
 			"This might be because of an invalid syntax or missing transisions")
 	}
 
-	return true, nil
+	return start, nil
 }
 
 func solveEmptinessProblem(stateTable map[string]state, transitionTable map[key]value) bool {
@@ -103,18 +103,20 @@ func DLS(node state, target state, table map[key]value, limit int) bool {
 	return false
 }
 
-func assertOneStart(table map[string]state) error {
+func assertOneStart(table map[string]state) (state, error) {
 	counter := 0
 	err = nil
+	var s state
 	for _, v := range table {
 		if v.stateType == startState {
+			s = v
 			counter++
 		}
 	}
 	if counter != 1 {
-		return fmt.Errorf("A state machine must have exactly one start state, but %d were given", counter)
+		return s, fmt.Errorf("A state machine must have exactly one start state, but %d were given", counter)
 	}
-	return nil
+	return s, nil
 }
 
 func assertMoreThanOneEnd(table map[string]state) error {
