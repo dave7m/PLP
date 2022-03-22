@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	createFile      bool
 	path            string
 	reader          = bufio.NewReader(os.Stdin)
 	TransitionTable = make(map[key]value)
@@ -43,14 +44,15 @@ type state struct {
 // init is called before main()
 func init() {
 	// create a custom flag accepting a string and saving it to path.
-	flag.StringVar(&path, "path", "", "absolute path of machine file")
+	flag.StringVar(&path, "path", "", "path of machine file")
+	flag.BoolVar(&createFile, "c", false, "bool: create compressed file without comments")
 }
 
 func main() {
 	flag.Parse()
 
 	if len(path) == 0 {
-		fmt.Println("Usage: go run . -path YOUR_PATH")
+		fmt.Println("Don't forget to specify the path to the .machine file!")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -70,8 +72,10 @@ func executeStateMachineConfiguration() {
 		log.Fatal(err)
 	}
 
-	// optional:
-	serialize()
+	// flag
+	if createFile {
+		serialize()
+	}
 
 	// run internal State Machine
 
