@@ -3,20 +3,22 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 )
 
 // simplify input file, initialize StateTable and TransitionTable
-func parse() {
+func parse() error {
 
-	initializeStateTable()
-	initializeTransitionTable()
-
+	err1 := initializeStateTable()
+	if err1 != nil {
+		return err1
+	}
+	err2 := initializeTransitionTable()
+	return err2 // nil or error
 }
 
 // reads the simplified file and creates entries in a dictionary. Key is the stateName, Value is a state.
-func initializeStateTable() {
+func initializeStateTable() error {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -40,7 +42,10 @@ func initializeStateTable() {
 			stateType: startState,
 		}
 		// create entry at stateName
-		StateTable[stName] = stState
+		err = setState(stState)
+		if err != nil {
+			return err
+		}
 	}
 
 	for i := 0; i < len(normalStates); i++ {
@@ -55,7 +60,10 @@ func initializeStateTable() {
 			stateType: normalState,
 		}
 		// create entry at stateName
-		StateTable[stName] = stState
+		err = setState(stState)
+		if err != nil {
+			return err
+		}
 	}
 
 	for i := 0; i < len(endStates); i++ {
@@ -70,8 +78,20 @@ func initializeStateTable() {
 			stateType: endState,
 		}
 		// create entry at stateName
-		StateTable[stName] = stState
+		err = setState(stState)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
+}
+
+func setState(s state) error {
+	if _, notOk := StateTable[s.stateName]; notOk {
+		return fmt.Errorf("multiple state definitions for state %s", s.stateName)
+	}
+	StateTable[s.stateName] = s
+	return nil
 }
 
 func getStateText(s string) string {
@@ -82,7 +102,7 @@ func getStateText(s string) string {
 // reads simplified file and adds entries to the dictionary TransitionTable. key is a struct with old state and the action,
 // value is a struct with new state and transition text. If a transition is invalid, because a state is missing in the
 // StateTable, the program stops with an error.
-func initializeTransitionTable() {
+func initializeTransitionTable() error {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -103,13 +123,13 @@ func initializeTransitionTable() {
 		// lookups in StateTable
 		oldState, exists := StateTable[oldStateName]
 		if !exists {
-			log.Fatal(fmt.Sprintf("An Error occured while parsing the file. See for more details: \n"+
-				"Source state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName))
+			return fmt.Errorf("An Error occured while parsing the file. See for more details: \n"+
+				"Source state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName)
 		}
 		newState, exists := StateTable[newStateName]
 		if !exists {
-			log.Fatal(fmt.Sprintf("An Error occured while parsing the file. See for more details: \n"+
-				"Destintation state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName))
+			return fmt.Errorf("An Error occured while parsing the file. See for more details: \n"+
+				"Destintation state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName)
 		}
 
 		// create new transition
@@ -125,4 +145,5 @@ func initializeTransitionTable() {
 		// create new entry in the TransitionTable at k
 		TransitionTable[k] = v
 	}
+	return nil
 }

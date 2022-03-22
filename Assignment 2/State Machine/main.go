@@ -63,7 +63,11 @@ func main() {
 func executeStateMachineConfiguration() {
 
 	// parse the file and save it as data structures
-	parse()
+	err = parse()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(StateTable)
 
 	var s state
 	// validate internal representation of the State Machine and returns start state
