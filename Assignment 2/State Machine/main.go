@@ -118,7 +118,7 @@ func doTransition(oldState state, input string) state {
 
 	t, found := TransitionTable[key{state: oldState, action: input}]
 	if !found {
-		fmt.Print("Invalid input")
+		fmt.Println("Invalid input!")
 		return oldState
 	}
 	fmt.Print(t.description)
