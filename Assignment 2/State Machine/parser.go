@@ -9,20 +9,21 @@ import (
 // simplify input file, initialize StateTable and TransitionTable
 func parse() error {
 
-	err1 := initializeStateTable()
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	err1 := initializeStateTable(content)
 	if err1 != nil {
 		return err1
 	}
-	err2 := initializeTransitionTable()
+	err2 := initializeTransitionTable(content)
 	return err2 // nil or error
 }
 
 // reads the simplified file and creates entries in a dictionary. Key is the stateName, Value is a state.
-func initializeStateTable() error {
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+func initializeStateTable(content []byte) error {
 
 	// parse all states
 	sStates := startStateRE.FindAll(content, -1)
@@ -102,11 +103,7 @@ func getStateText(s string) string {
 // reads simplified file and adds entries to the dictionary TransitionTable. key is a struct with old state and the action,
 // value is a struct with new state and transition text. If a transition is invalid, because a state is missing in the
 // StateTable, the program stops with an error.
-func initializeTransitionTable() error {
-	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+func initializeTransitionTable(content []byte) error {
 
 	//get all transitions from content
 	allTransitions := transitionRE.FindAll(content, -1)
@@ -143,6 +140,9 @@ func initializeTransitionTable() error {
 		}
 
 		// create new entry in the TransitionTable at k
+		if _, notOk := TransitionTable[k]; notOk {
+			return fmt.Errorf("the key %q appears twice in the input file", k)
+		}
 		TransitionTable[k] = v
 	}
 	return nil

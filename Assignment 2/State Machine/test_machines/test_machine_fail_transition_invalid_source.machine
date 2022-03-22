@@ -1,0 +1,4 @@
+@*Start{foo}
+@State{foo}
+@+End{foo}
+> InvalidState (foo) End : Whatever

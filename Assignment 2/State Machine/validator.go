@@ -28,8 +28,8 @@ func isValid(originalStateTable map[string]state, originalTransitionTable map[ke
 		return state{}, err2
 	}
 
-	isEmpty := solveEmptinessProblem(stateTable, transitionTable)
-	if !isEmpty {
+	isReachable := solveEmptinessProblem(stateTable, transitionTable)
+	if !isReachable {
 		return state{}, fmt.Errorf("state machine is empty, that is, there is no run from the start state to any end. " +
 			"This might be because of an invalid syntax or missing transisions")
 	}
@@ -120,7 +120,7 @@ func assertOneStart(table map[string]state) (state, error) {
 }
 
 func assertMoreThanOneEnd(table map[string]state) error {
-	counter := 1
+	counter := 0
 	err = nil
 	for _, v := range table {
 		if v.stateType == endState {

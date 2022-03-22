@@ -1,0 +1,39 @@
+@*Park{
+  The transmission is in "park".
+  (Drive) Put the transmission into "drive"
+  (Leave) Leave the car (quit)
+}
+
+@+Leave{
+  Bye bye!
+}
+
+# Note that this state is not mentioned in any state description
+# but it's still valid and it would be reached if someone typed
+# 'Crash' while in the driving state, because there exists a
+# corresponding transition below.
+@+Crash{
+  Get well soon!
+}
+
+@Drive{
+  The transmission is in "drive".
+  (Roll) Start driving
+  (Park) Put the transmission into "park"
+  (Honk angrily) Toot the horn!
+}
+
+@Driving{
+  You are driving.
+  (Stop) Stop the car.
+  (Honk angrily) Toot the horn!
+}
+
+> Park (Drive) Drive: You select "drive" (D)
+> Park (Leave) Leave: You leave the car: "Good bye!"
+> Drive (Roll) Driving: You start driving
+> Drive (Park) Park: You select "park" (P)
+>   Driving   (  Crash  )   Crash  : You crash the car! >.<
+>Driving(Stop)Drive: You stop the car
+> Drive (Honk angrily) Drive: Toot!
+> Driving (  Honk angrily   ) Driving: Toot!

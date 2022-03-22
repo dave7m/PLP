@@ -1,0 +1,4 @@
+@*Start{foo}
+@State{foo}
+
+> Start (foo) State
