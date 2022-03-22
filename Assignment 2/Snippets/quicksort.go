@@ -7,24 +7,24 @@ import (
 
 func main() {
 	a := []int{6, 3, -6, -45, 7, 3, 9, 4, 35, 6, 8, 4, 24, 8, 5}
-	fmt.Println("sorting ", a)
+	fmt.Println("before sorting: ", a)
 	quicksort(a)
-	fmt.Println(a)
+	fmt.Println("after sorting: ", a)
 
 	y := []string{"Foo", "foo", "foobar", "FizzBuzz", "abc", "cbde", "aaaa", "zzz", "fses"}
-	fmt.Println("sorting ", y)
+	fmt.Println("before sorting: ", y)
 	quicksort(y)
-	fmt.Println(y)
+	fmt.Println("after sorting: ", y)
 
 	z := []float64{10.45, 3.141, -49, 25.24, 924.1, 4.5, 6.2, 9.5, -3.5}
-	fmt.Println("sorting ", z)
+	fmt.Println("before sorting: ", z)
 	quicksort(z)
-	fmt.Println(z)
+	fmt.Println("after sorting: ", z)
 
 	x := []uint{6, 3, 7, 3, 9, 4, 35, 6, 8, 4, 24, 8, 5}
-	fmt.Println("sorting ", x)
+	fmt.Println("before sorting: ", x)
 	quicksort(x)
-	fmt.Println(x)
+	fmt.Println("after sorting: ", x)
 }
 
 // generics are only supported since Go 1.18, so make sure to have downloaded the recent version
@@ -38,7 +38,8 @@ func quicksort[E constraints.Ordered](list []E) {
 }
 
 // this quicksort algorithm uses dual pivot, meaning in the partitioning we create two pivots instead of one
-// the algorithm is semi efficient, because we do not gain very much from dual pivot, and the pivots are not chosen randomly, so the worst case does not improve (O(n^2)).
+// the algorithm is semi efficient, because we do not gain very much from dual pivot, and the pivots are not chosen randomly,
+// so the worst case does not improve (O(n^2)). But I wanted some practice :)
 func quicksortHelper[E constraints.Ordered](list []E, l int, r int) {
 	if r-l <= 0 {
 		return
@@ -52,6 +53,7 @@ func quicksortHelper[E constraints.Ordered](list []E, l int, r int) {
 	quicksortHelper(list, q+1, r)
 }
 
+// partitions the list from lo to hi and returns two pivots
 func partition[E constraints.Ordered](list []E, lo int, hi int) (int, int) {
 	l := lo + 1
 	m := lo + 1
