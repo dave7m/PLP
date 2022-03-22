@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -23,9 +23,6 @@ func initializeStateTable() {
 	if err != nil {
 		panic(err)
 	}
-	startStateRE, _ := regexp.Compile("\n@\\*[a-zA-Z0-9]*{[^}]*}")
-	normalStateRE, _ := regexp.Compile("\n@[a-zA-Z0-9]*{[^}]*}")
-	endStateRE, _ := regexp.Compile("\n@\\+[a-zA-Z0-9]*{[^}]*}")
 
 	sState := string(startStateRE.Find(content))
 	normalStates := normalStateRE.FindAll(content, -1)
@@ -89,7 +86,7 @@ func initializeTransitionTable() {
 		panic(err)
 	}
 	//fmt.Println(content)
-	transitionRE, _ := regexp.Compile("(?m)^>\\s*\\w*\\s*\\([\\s*\\w]+\\)\\s*\\w*\\s*:\\s*[^\\n]*$")
+	//transitionRE, _ := regexp.Compile("(?m)^>\\s*\\w*\\s*\\([\\s*\\w]+\\)\\s*\\w*\\s*:\\s*[^\\n]*$")
 	allTransitions := transitionRE.FindAll(content, -1)
 	for i := 0; i < len(allTransitions); i++ {
 		s := string(allTransitions[i])
@@ -106,11 +103,13 @@ func initializeTransitionTable() {
 		// lookup in StateTable
 		oldState, exists := StateTable[oldStateName]
 		if !exists {
-			panic("old state seems not to exist")
+			log.Fatal(fmt.Sprintf("An Error occured while parsing the file. See for more details: \n"+
+				"Source state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName))
 		}
 		newState, exists := StateTable[newStateName]
 		if !exists {
-			panic(fmt.Sprintf("newState: %s seems not to exist in state table!", newStateName))
+			log.Fatal(fmt.Sprintf("An Error occured while parsing the file. See for more details: \n"+
+				"Destintation state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName))
 		}
 		k := key{
 			state:  oldState,
@@ -137,7 +136,6 @@ func simplifyStateMachine(content []byte) {
 	}
 
 	// match all start states and write them to file
-	startStateRE, _ := regexp.Compile("\n@\\*[a-zA-Z0-9]*{[^}]*}")
 	allStartStates := startStateRE.FindAll(content, -1)
 	//fmt.Printf("%q\n", allStartStates)
 	if len(allStartStates) != 1 {
@@ -149,7 +147,6 @@ func simplifyStateMachine(content []byte) {
 	}
 
 	// match all normal states and write them to file
-	normalStateRE, _ := regexp.Compile("\n@[a-zA-Z0-9]*{[^}]*}")
 	allNormalStates := normalStateRE.FindAll(content, -1)
 	//fmt.Printf("%q\n", allStartStates)
 	for i := 0; i < len(allNormalStates); i++ {
@@ -160,7 +157,6 @@ func simplifyStateMachine(content []byte) {
 	}
 
 	// match all end states and write them to file
-	endStateRE, _ := regexp.Compile("\n@\\+[a-zA-Z0-9]*{[^}]*}")
 	allEndStates := endStateRE.FindAll(content, -1)
 	//fmt.Printf("%q\n", allStartStates)
 	for i := 0; i < len(allEndStates); i++ {
@@ -171,7 +167,6 @@ func simplifyStateMachine(content []byte) {
 	}
 
 	// match all transitions and write them to file
-	transitionRE, _ := regexp.Compile("(?m)>\\s*\\w*\\s*\\(\\s*\\w*\\s*\\)\\s*\\w*\\s*:\\s*[\\s\\S]*$")
 	allTransitions := transitionRE.FindAll(content, -1)
 	for i := 0; i < len(allTransitions); i++ {
 		_, err = file.WriteString(string(allTransitions[i]) + "\n")
