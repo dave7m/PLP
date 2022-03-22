@@ -10,7 +10,9 @@ import (
 
 // simplify input file, initialize StateTable and TransitionTable. Because of the order of the operations, the tables
 // must be correct and not scanned for invalidity.
-func doParse(content []byte) {
+func parse(content []byte) {
+	// note: the simplifyStateMachine is not at all necessary, we could do just fine without them, but it produces a file
+	// which is ordered and without comments and invalid state / transition definitions, which is nice
 	simplifyStateMachine(content)
 	initializeStateTable()
 	// fmt.Printf("%q\n", StateTable)

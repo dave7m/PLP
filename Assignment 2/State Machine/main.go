@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -69,20 +70,41 @@ func executeMachineAt(path string) {
 
 	// prepend newline to content
 	contentToParse := append(append([]byte{10}, content...), 10)
-	doParse(contentToParse)
+	parse(contentToParse)
+	_, err = isValid(StateTable, TransitionTable)
+	if err != nil {
+		log.Fatal(err)
+	}
 	serialize()
 
 	// fmt.Printf("%q\n", TransitionTable)
-	/*
-		s := Start
-		for s.stateType != endState {
-			fmt.Println(s.stateText)
-			input, err := reader.ReadString('\n')
-			if err != nil {
-				panic(err)
-			}
-			s = doTransition(s, input)
-		}*/
+
+	s := Start
+	for s.stateType != endState {
+		checkSinkState(s)
+		fmt.Println(s.stateText)
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			panic(err)
+		}
+		s = doTransition(s, input)
+	}
+}
+
+// we are in a sink state, if there is no transition out of the state
+func checkSinkState(s state) {
+	counter := 0
+	// check in the TransitionTable if there is a transition
+	for k, _ := range TransitionTable {
+		if k.state == s {
+			counter++
+		}
+	}
+	if counter == 0 {
+		fmt.Printf("\"%s\" is a sink state: there are no transitions out of this state, even though \"%s\" is not an end state."+
+			"The program is terminated.", s.stateName, s.stateName)
+		os.Exit(3)
+	}
 }
 
 func doTransition(oldState state, input string) state {
