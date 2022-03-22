@@ -67,7 +67,6 @@ func executeStateMachineConfiguration() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(StateTable)
 
 	var s state
 	// validate internal representation of the State Machine and returns start state
@@ -89,6 +88,10 @@ func executeStateMachineConfiguration() {
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			panic(err)
+		}
+		input = strings.Trim(input, "\r\n")
+		if input == "quit" {
+			os.Exit(0)
 		}
 		s = doTransition(s, input)
 	}
@@ -112,7 +115,7 @@ func checkSinkState(s state) {
 
 // changes the current state to the state specified in the transition
 func doTransition(oldState state, input string) state {
-	input = strings.Trim(input, "\r\n")
+
 	t, found := TransitionTable[key{state: oldState, action: input}]
 	if !found {
 		fmt.Print("Invalid input")
