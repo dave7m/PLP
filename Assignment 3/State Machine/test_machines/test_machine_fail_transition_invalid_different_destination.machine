@@ -1,0 +1,18 @@
+@*Start{s}
+
+@State1{s}
+@State2{s}
+@State3{s}
+@State4{s}
+
+@+End1{s}
+@+End2{s}
+
+>Start(x)State1  : foo
+>Start(y)State2  : foo
+>State1(x)State2  : foo
+>State3(x)State2  : foo
+>State1(z)End1 :foo
+
+# invalid:
+>State3(x)State4 : foo

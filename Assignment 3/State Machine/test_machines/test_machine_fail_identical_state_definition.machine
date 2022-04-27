@@ -1,0 +1,5 @@
+@*Start{foo}
+@State{foo}
+@State{fofo}
+@+End{foo}
+> Start (foo) End

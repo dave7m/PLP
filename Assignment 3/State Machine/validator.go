@@ -27,7 +27,17 @@ func isValid(originalStateTable map[string]state, originalTransitionTable map[ke
 	if err2 != nil {
 		return state{}, err2
 	}
+	// check if end states don't are auto-forwarding
+	err3 := assertEndStatesAreNotForwarding(stateTable)
+	if err3 != nil {
+		return state{}, err3
+	}
 
+	// check if each auto-forwarding state only has one transition
+	err4 := assertOneCorrectTransitionPerForwardingState(stateTable, transitionTable)
+	if err4 != nil {
+		return state{}, err4
+	}
 	isReachable := solveEmptinessProblem(stateTable, transitionTable)
 	if !isReachable {
 		return state{}, fmt.Errorf("state machine is empty, that is, there is no run from the start state to any end. " +
@@ -35,6 +45,46 @@ func isValid(originalStateTable map[string]state, originalTransitionTable map[ke
 	}
 
 	return start, nil
+}
+
+func assertOneCorrectTransitionPerForwardingState(stTable map[string]state, trTable map[key]value) error {
+	for _, st := range stTable {
+		// get an auto-forwarding state
+		if st.transitionBase.transitionType == autoForward {
+			counter := 0
+			for k, v := range trTable {
+				// autoForward state reaches
+				if st == k.state {
+					counter++
+				}
+				// autoForward state is being reached
+				if st == v.state {
+					action := k.action
+					_, found := trTable[key{state: st, action: action}]
+					if !found {
+						return fmt.Errorf("State \"" + st.stateName + "\" which is auto-forwarding is reached by " +
+							"action \"" + action + "\" has no transition to another state with the same action.")
+					}
+				}
+			}
+			// see if it has exactly one transition
+			if counter != 1 {
+				return fmt.Errorf("State \""+st.stateName+"\" must have exactly one transition because it is auto "+
+					"forwarding but %d were given.", counter)
+			}
+
+		}
+	}
+	return nil
+}
+
+func assertEndStatesAreNotForwarding(table map[string]state) error {
+	for _, st := range table {
+		if st.stateType == endState && st.transitionBase.transitionType == autoForward {
+			return fmt.Errorf("End State \"" + st.stateName + "\" is an auto forwarding state, but should not be one!")
+		}
+	}
+	return nil
 }
 
 func solveEmptinessProblem(stateTable map[string]state, transitionTable map[key]value) bool {

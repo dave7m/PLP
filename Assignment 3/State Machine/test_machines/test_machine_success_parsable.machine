@@ -1,0 +1,20 @@
+@*Start{foo}
+@*Start2{foo}
+@ state1 {foo}
+@   state2                 { fo
+fo
+fo
+}
+@+End{x}
+@           +              End2             {
+            fo
+            }
+
+
+
+
+
+>Start(foo)state1:blabla
+> Start (foofoo) state2 : blabla
+> state1 (fo) End: huhu
+>                state2             (gogo)            End2             :             huhu

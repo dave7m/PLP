@@ -4,13 +4,15 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/inancgumus/screen" // used for clearing the screen
+	"github.com/inancgumus/screen"
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
+	input           string
 	createFile      bool
 	path            string
 	reader          = bufio.NewReader(os.Stdin)
@@ -29,6 +31,7 @@ type value struct {
 
 // this is a new type
 type stateType int
+type transitionType int
 
 const (
 	startState stateType = iota // iota 'enumerates' the states -> startState has val 0
@@ -36,10 +39,22 @@ const (
 	endState
 )
 
+const (
+	autoForward transitionType = iota
+	defaultForward
+)
+
+type transitionBase struct {
+	transitionType transitionType
+	transitionTime uint64
+}
+
+// a state has now a transition type
 type state struct {
-	stateType stateType
-	stateName string
-	stateText string
+	stateType      stateType
+	transitionBase transitionBase
+	stateName      string
+	stateText      string
 }
 
 // init is called before main()
@@ -86,13 +101,24 @@ func executeStateMachineConfiguration() {
 	for s.stateType != endState {
 		checkSinkState(s)
 		fmt.Println(s.stateText)
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			panic(err)
-		}
-		input = strings.Trim(input, "\r\n")
-		if input == "quit" {
-			os.Exit(0)
+
+		if s.transitionBase.transitionType == autoForward {
+
+			// sleep for t milliseconds
+			t := time.Duration(int(s.transitionBase.transitionTime))
+			time.Sleep(time.Millisecond * t)
+			// input is stored globally, so default input for the next state is the same input as before (input = action)
+
+		} else {
+			input, err = reader.ReadString('\n')
+			if err != nil {
+				panic(err)
+			}
+			input = strings.Trim(input, "\r\n")
+
+			if input == "quit" {
+				os.Exit(0)
+			}
 		}
 		// before doing the transition, we clear the screen (task A), for this, we use an external libraries to better
 		// cope with different operating systems (I think it does not work with bash): github.com/inancgumus/screen
@@ -100,6 +126,7 @@ func executeStateMachineConfiguration() {
 		screen.MoveTopLeft()
 
 		s = doTransition(s, input)
+
 	}
 }
 

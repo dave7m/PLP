@@ -1,6 +1,9 @@
 package main
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 var newFile *os.File
 var err error
@@ -28,6 +31,7 @@ func writeStates() {
 	// iterate through StateTable
 	for _, st := range StateTable {
 		var typ = "@"
+		var t = ""
 		switch st.stateType {
 		case startState:
 			typ += "*"
@@ -35,8 +39,12 @@ func writeStates() {
 		case endState:
 			typ += "+"
 		}
+		if st.transitionBase.transitionType == autoForward {
+			typ += "!"
+			t = strconv.FormatUint(st.transitionBase.transitionTime, 10)
+		}
 
-		stateString := typ + st.stateName + "{" + st.stateText + "}\n"
+		stateString := typ + st.stateName + t + "{" + st.stateText + "}\n"
 		_, err = newFile.WriteString(stateString)
 		if err != nil {
 			panic(err)

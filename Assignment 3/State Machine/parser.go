@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -34,13 +35,21 @@ func initializeStateTable(content []byte) error {
 	for i := 0; i < len(sStates); i++ {
 		st := string(sStates[i])
 
+		// get if state is an auto-forwarding state and the stateName and transitionBase
+		stBase, stName, err := isAutoForwarding(st)
+		if err != nil {
+			return err
+		}
+
 		// get name and text of states
-		stName := strings.Trim(st[strings.Index(st, "*")+1:strings.Index(st, "{")], " ")
+		// stName := strings.Trim(st[strings.Index(st, "*")+1:strings.Index(st, "{")], " ")
+
 		stText := getStateText(st)
 		stState := state{
-			stateName: stName,
-			stateText: stText,
-			stateType: startState,
+			stateName:      stName,
+			transitionBase: stBase,
+			stateText:      stText,
+			stateType:      startState,
 		}
 		// create entry at stateName
 		err = setState(stState)
@@ -51,14 +60,18 @@ func initializeStateTable(content []byte) error {
 
 	for i := 0; i < len(normalStates); i++ {
 		st := string(normalStates[i])
-
 		// get name and text of states
-		stName := strings.Trim(st[strings.Index(st, "@")+1:strings.Index(st, "{")], " ")
+		// get if state is an auto-forwarding state and the stateName and transitionBase
+		stBase, stName, err := isAutoForwarding(st)
+		if err != nil {
+			return err
+		}
 		stText := getStateText(st)
 		stState := state{
-			stateName: stName,
-			stateText: stText,
-			stateType: normalState,
+			stateName:      stName,
+			transitionBase: stBase,
+			stateText:      stText,
+			stateType:      normalState,
 		}
 		// create entry at stateName
 		err = setState(stState)
@@ -71,12 +84,17 @@ func initializeStateTable(content []byte) error {
 		st := string(endStates[i])
 
 		// get name and text for end states
-		stName := strings.Trim(st[strings.Index(st, "+")+1:strings.Index(st, "{")], " ")
+		// get if state is an auto-forwarding state and the stateName and transitionBase
+		stBase, stName, err := isAutoForwarding(st)
+		if err != nil {
+			return err
+		}
 		stText := getStateText(st)
 		stState := state{
-			stateName: stName,
-			stateText: stText,
-			stateType: endState,
+			stateName:      stName,
+			transitionBase: stBase,
+			stateText:      stText,
+			stateType:      endState,
 		}
 		// create entry at stateName
 		err = setState(stState)
@@ -85,6 +103,51 @@ func initializeStateTable(content []byte) error {
 		}
 	}
 	return nil
+}
+
+// precondition: st is the string of a state (scanned by regex here)
+// in order to work, it can only have one "!", the state name cannot have digits, and the time is only allowed if it is a
+// auto-forwarding state
+func isAutoForwarding(st string) (transitionBase, string, error) {
+	// get the substring from (excluding) "@" to (excluding) "{" and eliminate white spaces
+	var err error = nil
+	subString := strings.Trim(st[strings.Index(st, "@")+1:strings.Index(st, "{")], " ")
+	// the first two characters now determine the state type and if it is auto-forwarding
+	autoForwarding := false
+	if subString[0] == '!' || subString[1] == '!' {
+		autoForwarding = true
+	}
+	s := strings.Trim(subString, "*+!")
+	// the first digit splits s into the stateName and the transitionTime
+	var stateName string
+	var tT string
+	// s must have the form abcd392, ab8c9d3 would lead to unpredicted behaviour (but we feed the function only with valid values anyway)
+	for _, char := range s {
+		if isAlpha(char) {
+			stateName += string(char)
+		} else {
+			tT += string(char)
+		}
+	}
+	var transitionTime uint64
+	if len(tT) == 0 {
+		transitionTime = 0
+	} else {
+		transitionTime, err = strconv.ParseUint(tT, 10, 64)
+	}
+
+	stBase := transitionBase{transitionTime: transitionTime}
+	if autoForwarding {
+		stBase.transitionType = autoForward
+	} else {
+		stBase.transitionType = defaultForward
+	}
+
+	return stBase, stateName, err
+}
+
+func isAlpha(charVariable rune) bool {
+	return (charVariable >= 'a' && charVariable <= 'z') || (charVariable >= 'A' && charVariable <= 'Z')
 }
 
 func setState(s state) error {
@@ -121,7 +184,7 @@ func initializeTransitionTable(content []byte) error {
 		oldState, exists := StateTable[oldStateName]
 		if !exists {
 			return fmt.Errorf("An Error occured while parsing the file. See for more details: \n"+
-				"Source state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", newStateName)
+				"Source state \"%s\" does not exist! -> State machine is invalid! \nProgram terminated", oldStateName)
 		}
 		newState, exists := StateTable[newStateName]
 		if !exists {
