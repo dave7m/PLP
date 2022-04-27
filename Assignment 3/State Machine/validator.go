@@ -52,20 +52,23 @@ func assertOneCorrectTransitionPerForwardingState(stTable map[string]state, trTa
 		// get an auto-forwarding state
 		if st.transitionBase.transitionType == autoForward {
 			counter := 0
-			for k, v := range trTable {
+			for k := range trTable {
 				// autoForward state reaches
 				if st == k.state {
 					counter++
 				}
 				// autoForward state is being reached
-				if st == v.state {
-					action := k.action
-					_, found := trTable[key{state: st, action: action}]
-					if !found {
-						return fmt.Errorf("State \"" + st.stateName + "\" which is auto-forwarding is reached by " +
-							"action \"" + action + "\" has no transition to another state with the same action.")
+				// commented out because Doggo allows for inconsistent action name anyway
+				/*
+					if st == v.state {
+						action := k.action
+						_, found := trTable[key{state: st, action: action}]
+						if !found {
+							return fmt.Errorf("State \"" + st.stateName + "\" which is auto-forwarding is reached by " +
+								"action \"" + action + "\" has no transition to another state with the same action.")
+						}
 					}
-				}
+				*/
 			}
 			// see if it has exactly one transition
 			if counter != 1 {

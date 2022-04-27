@@ -1,4 +1,17 @@
 ##Readme
+
+For the third Assignment, the action names of the transitions from auto-forwarding states should in my
+opinion match with the action names of the states that called them. E.g In rolling.machine, the transition 
+"Rolling" has the same action name (slide) as the auto-forwarding state that called it (called by rolling,
+which itself was called by slide). However, with this logic, the doggo.machine would not work, thus I 
+decided to ignore any action names in transitions from auto-forwarding states. You'll find in the validator
+some commented code that shows I would have tested for this.
+
+\
+Also, the parser ignores invalid states, and does not try to recover, so @!abc{hi} is not valid and ignored, @!abc2{hi} 
+is valid, @abc{hi} is not valid and ignored.
+
+\
 https://zetcode.com/golang/flag/
 
 First, copy the path of your .machine file. If you try to run it without the path variable, 

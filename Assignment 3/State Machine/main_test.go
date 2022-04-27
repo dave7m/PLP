@@ -68,7 +68,8 @@ func TestValidateSuccess(t *testing.T) {
 		t.Fatal("Parsing failed")
 	}
 	s, err := isValid(StateTable, TransitionTable)
-	expected := state{stateName: "Park", stateText: "\n  The transmission is in \"park\".\n  " +
+	expected := state{stateName: "Park", transitionBase: transitionBase{transitionType: defaultForward,
+		transitionTime: 0}, stateText: "\n  The transmission is in \"park\".\n  " +
 		"(Drive) Put the transmission into \"drive\"\n  (Leave) Leave the car (quit)\n",
 		stateType: startState}
 
@@ -110,41 +111,78 @@ func TestValidateFail_NoRunPossible(t *testing.T) {
 		"state to any end states")
 }
 
+func TestValidateFail_EndStateIsAutoForwarding(t *testing.T) {
+	setup()
+	path = "test_machines/test_machine_fail_end_state_is_auto_forwarding.machine"
+	err := parse()
+	if err != nil {
+		t.Fatal("Parsing failed")
+	}
+	_, err = isValid(StateTable, TransitionTable)
+	assert.NotNil(t, err, "expected an Error when validating a state"+
+		"machine with and end-state that is auto-forwarding")
+}
+
+func TestValidateFail_AutoForwardingStateHasMultipleTransitions(t *testing.T) {
+	setup()
+	path = "test_machines/test_machine_fail_auto_forwarding_state_has_two_transitions.machine"
+	err := parse()
+	if err != nil {
+		t.Fatal("Parsing failed")
+	}
+	_, err = isValid(StateTable, TransitionTable)
+	assert.NotNil(t, err, "expected an Error when validating a state machine with a forwarding state having "+
+		"multiple transitions")
+}
+
 func init1(expectedStateTable map[string]state) {
 	expectedStateTable["Start"] = state{
-		stateName: "Start",
-		stateText: "foo",
-		stateType: startState,
+		stateName:      "Start",
+		transitionBase: transitionBase{transitionType: defaultForward, transitionTime: 0},
+		stateText:      "foo",
+		stateType:      startState,
 	}
-	expectedStateTable["Start2"] = state{
-		stateName: "Start2",
-		stateText: "foo",
-		stateType: startState,
+	expectedStateTable["StartTwo"] = state{
+		stateName:      "StartTwo",
+		transitionBase: transitionBase{transitionType: defaultForward, transitionTime: 0},
+		stateText:      "foo",
+		stateType:      startState,
 	}
-	expectedStateTable["state1"] = state{
-		stateName: "state1",
-		stateText: "foo",
-		stateType: normalState,
+	expectedStateTable["AutoForward"] = state{
+		stateName:      "AutoForward",
+		transitionBase: transitionBase{transitionType: autoForward, transitionTime: 2000},
+		stateText:      " Autoforwarding ",
+		stateType:      normalState,
 	}
-	expectedStateTable["state2"] = state{
-		stateName: "state2",
-		stateText: " fo\nfo\nfo\n",
-		stateType: normalState,
+	expectedStateTable["stateOne"] = state{
+		stateName:      "stateOne",
+		transitionBase: transitionBase{transitionType: defaultForward, transitionTime: 0},
+		stateText:      "foo",
+		stateType:      normalState,
+	}
+	expectedStateTable["stateTwo"] = state{
+		stateName:      "stateTwo",
+		stateText:      " fo\nfo\nfo\n",
+		transitionBase: transitionBase{transitionType: defaultForward, transitionTime: 0},
+		stateType:      normalState,
 	}
 	expectedStateTable["End"] = state{
-		stateName: "End",
-		stateText: "x",
-		stateType: endState,
+		stateName:      "End",
+		transitionBase: transitionBase{transitionType: defaultForward, transitionTime: 0},
+		stateText:      "x",
+		stateType:      endState,
 	}
-	expectedStateTable["End2"] = state{
-		stateName: "End2",
-		stateText: "\n            fo\n            ",
-		stateType: endState,
+	expectedStateTable["EndTwo"] = state{
+		stateName:      "EndTwo",
+		transitionBase: transitionBase{transitionType: defaultForward, transitionTime: 0},
+		stateText:      "\n            fo\n            ",
+		stateType:      endState,
 	}
 }
 func init2(expectedTransitionTable map[key]value, table map[string]state) {
-	expectedTransitionTable[key{state: table["Start"], action: "foo"}] = value{state: table["state1"], description: "blabla"}
-	expectedTransitionTable[key{state: table["Start"], action: "foofoo"}] = value{state: table["state2"], description: "blabla"}
-	expectedTransitionTable[key{state: table["state1"], action: "fo"}] = value{state: table["End"], description: "huhu"}
-	expectedTransitionTable[key{state: table["state2"], action: "gogo"}] = value{state: table["End2"], description: "huhu"}
+	expectedTransitionTable[key{state: table["Start"], action: "foo"}] = value{state: table["stateOne"], description: "blabla"}
+	expectedTransitionTable[key{state: table["Start"], action: "foofoo"}] = value{state: table["stateTwo"], description: "blabla"}
+	expectedTransitionTable[key{state: table["stateOne"], action: "fo"}] = value{state: table["End"], description: "huhu"}
+	expectedTransitionTable[key{state: table["stateTwo"], action: "gogo"}] = value{state: table["AutoForward"], description: "huhu"}
+	expectedTransitionTable[key{state: table["AutoForward"], action: "gugu"}] = value{state: table["EndTwo"], description: "blabla"}
 }

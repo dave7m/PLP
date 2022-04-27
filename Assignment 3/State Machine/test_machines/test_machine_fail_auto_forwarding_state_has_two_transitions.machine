@@ -1,0 +1,7 @@
+@*Start{foo}
+@!State1000{foo}
+@+EndTwo{foo}
+@+End{foo}
+> Start (foo) State : Whatever
+> State {xyz} End : Yippiyee
+> State {hawenja} EndTwo : Desoxyribonuclein Acid

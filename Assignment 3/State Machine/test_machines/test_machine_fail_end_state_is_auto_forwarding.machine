@@ -1,0 +1,4 @@
+@*Start{foo}
+@State{foo}
+@!+End1000{foo}
+> Start (foo) End : Whatever

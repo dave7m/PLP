@@ -96,8 +96,11 @@ func executeStateMachineConfiguration() {
 		serialize()
 	}
 
-	// run internal State Machine
+	// clear screen
+	screen.Clear()
+	screen.MoveTopLeft()
 
+	// run internal State Machine
 	for s.stateType != endState {
 		checkSinkState(s)
 		fmt.Println(s.stateText)
@@ -126,8 +129,9 @@ func executeStateMachineConfiguration() {
 		screen.MoveTopLeft()
 
 		s = doTransition(s, input)
-
 	}
+	// we reached the end state, but want to show the stateText anyway
+	fmt.Println(s.stateText)
 }
 
 // we are in a sink state, if there is no transition out of the state
@@ -148,12 +152,34 @@ func checkSinkState(s state) {
 
 // changes the current state to the state specified in the transition
 func doTransition(oldState state, input string) state {
+	// because of issue (see Readme), redirect to doAutoTransition here
+	if oldState.transitionBase.transitionType == autoForward {
+		return doAutoTransition(oldState)
+	}
 
 	t, found := TransitionTable[key{state: oldState, action: input}]
+	a := input[:len(input)-1]
+	for !found && len(a) != 0 {
+		// Algorithm: strip action by one character, append an asterisk manually and see if it matches a wildcard action
+		t, found = TransitionTable[key{state: oldState, action: a + "*"}]
+		a = a[:len(a)-1]
+	}
 	if !found {
 		fmt.Println("Invalid input!")
 		return oldState
 	}
-	fmt.Print(t.description)
+	fmt.Println(t.description)
 	return t.state
+}
+
+func doAutoTransition(oldState state) state {
+	for k, v := range TransitionTable {
+		if k.state == oldState {
+			fmt.Println(v.description)
+			return v.state
+		}
+	}
+	fmt.Println("If you can read this on the terminal, the validator failed analyzing the auto-forwarding states")
+	os.Exit(3)
+	return oldState
 }

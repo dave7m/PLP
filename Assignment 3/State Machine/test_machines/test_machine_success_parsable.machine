@@ -1,20 +1,21 @@
 @*Start{foo}
-@*Start2{foo}
-@ state1 {foo}
-@   state2                 { fo
+@*StartTwo{foo}
+@ stateOne {foo}
+@   stateTwo                 { fo
 fo
 fo
 }
 @+End{x}
-@           +              End2             {
+@           +              EndTwo             {
             fo
             }
 
+@!AutoForward  2000  { Autoforwarding }
+>AutoForward(gugu)EndTwo:blabla
 
 
 
-
->Start(foo)state1:blabla
-> Start (foofoo) state2 : blabla
-> state1 (fo) End: huhu
->                state2             (gogo)            End2             :             huhu
+>Start(foo)stateOne:blabla
+> Start (foofoo) stateTwo : blabla
+> stateOne (fo) End: huhu
+>                stateTwo             (gogo)            AutoForward             :             huhu

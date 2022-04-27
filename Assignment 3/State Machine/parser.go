@@ -129,6 +129,7 @@ func isAutoForwarding(st string) (transitionBase, string, error) {
 			tT += string(char)
 		}
 	}
+	tT = strings.Trim(tT, " ")
 	var transitionTime uint64
 	if len(tT) == 0 {
 		transitionTime = 0
