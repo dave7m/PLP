@@ -1,0 +1,25 @@
+@*Ready{ You are standing in front of the vending machine
+ [Pay] Put some money into the machine
+ [Exit] Leave the machine}
+> Ready (Pay) Select: You put some money into the machine
+> Ready (Exit) Exit   : You're not thirsty right now
+
+@Select{ The machine is ready to accept your choice
+ [Cancel] Hit the cancel button
+ [Choose Cola] Select a Cola
+ [Choose Fanta] Select a Fanta
+ }
+> Select (*) Select: What are you doing??
+> Select (Cancel) Ready: You cancel the transaction
+> Select (Choose Cola) Dispense: You select a Cola
+> Select (Choose Fanta) Dispense: You select a Fanta
+# Custom error message for invalid action following 'Choose '
+> Select (Choose *) Select: That's not sold here...
+
+@Dispense{ Your choice has been dropped into the chute
+ [Take] Take the beverage from the chute }
+> Dispense (Take) Ready: You remove the beverage from the chute
+
+@+Exit{
+ Good bye! }
+
